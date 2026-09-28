@@ -31,6 +31,10 @@
   --warn-line: #f0d68a;
   --warn-text: #6b4f00;
   --shadow: 0 1px 2px rgba(16, 20, 28, 0.05);
+
+  /* 공감 버튼 */
+  --like: #c33b4c;
+  --like-bg: #fff1f1;
 }
 
 /* ⚠️ 다크 팔레트 (1/2) — 아래 :root[data-theme="dark"] 블록과 항상 똑같이 유지할 것.
@@ -59,6 +63,10 @@
     --warn-line: #6b5615;
     --warn-text: #f6de9d;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+    /* 공감 버튼 */
+    --like: #ff8a9b;
+    --like-bg: #2c1a1f;
   }
 }
 
@@ -84,6 +92,10 @@
   --warn-line: #6b5615;
   --warn-text: #f6de9d;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  /* 공감 버튼 */
+  --like: #ff8a9b;
+  --like-bg: #2c1a1f;
 }
 
 body {
@@ -275,6 +287,46 @@ button:disabled { background: var(--disabled-bg); color: var(--disabled-ink); cu
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
+/* ── 공감 버튼 ─────────────────────────────────────────── */
+/* 위의 button 규칙이 width:100% 라서 여기서 되돌려 준다 */
+.like {
+  width: auto;
+  margin-top: 8px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* 색은 직접 적지 않는다. 다크 테마에서 이 버튼만 흰색으로 남으면 안 된다. */
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* 이미 누른 글은 hover 반응을 주지 않는다 */
+.like:not([aria-disabled="true"]):hover {
+  background: var(--like-bg);
+  border-color: var(--like);
+  color: var(--like);
+}
+
+/* 이미 누른 글: 눌렸다는 게 색으로도 보이게. 흐려지면 안 된다 */
+.like.liked,
+.like[aria-disabled="true"] {
+  background: var(--like-bg);
+  border-color: var(--like);
+  color: var(--like);
+  cursor: default;
+}
+
+/* 응답 대기 중(진짜 disabled)만 흐려진다 */
+.like:disabled { opacity: 0.6; cursor: progress; }
+
+.like-count { font-variant-numeric: tabular-nums; }
 
 .foot {
   margin-top: 32px;

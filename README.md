@@ -99,6 +99,14 @@ Pages로 배포할 땐 config.js를 커밋하거나(=anon key 공개, 원래 공
 | INSERT (쓰기) | ✅ |
 | UPDATE (수정) | ❌ 정책 없음 → 거부 |
 | DELETE (삭제) | ❌ 정책 없음 → 거부 |
+| 공감 +1 | ✅ `like_entry()` 함수로만 |
+
+공감(좋아요)은 UPDATE가 필요하지만, "아무나 UPDATE" 정책을 열면 남의 `name`/`message`까지
+고칠 수 있게 된다. 그래서 UPDATE는 계속 막아 두고, `likes`를 1 올리는 일만 하는
+`like_entry()` 함수(`security definer`)에만 실행 권한을 줬다. **할 수 있는 일의 크기**를 줄이는 쪽이다.
+
+> 이미 이전 버전으로 테이블을 만들어 뒀다면 `supabase/schema.sql`을 **한 번 더 Run** 해야
+> `likes` 컬럼과 `like_entry()` 함수가 생긴다. 여러 번 돌려도 안전하게 써 뒀다.
 
 RLS를 **안 켜면**, 키를 주운 사람이 `delete from guestbook_entries` 한 줄로 전부 날릴 수 있다.
 "키를 숨기자"가 아니라 "키로 할 수 있는 일을 줄이자"가 정답이다.
