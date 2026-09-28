@@ -1,4 +1,10 @@
-/* ── 기본값 정리 ───────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   방명록 — 스타일 (빌드 도구 없음. 이 파일 하나가 전부다)
+
+   방향: 조용한 에디토리얼. 카드·그림자·그라데이션 대신
+   여백 · 얇은 괘선 · 활자 위계로 정리한다. 강조색은 딱 하나.
+   ────────────────────────────────────────────────────────── */
+
 * { box-sizing: border-box; }
 
 /* ── 색 토큰 ───────────────────────────────────────────────
@@ -9,134 +15,134 @@
      2) @media (prefers-color-scheme)  → OS가 어두우면 어두운 테마
      3) :root[data-theme="dark"]       → 사용자가 직접 고른 값이 항상 이긴다
    2번에 :not([data-theme="light"])가 붙어 있어야
-   "OS는 어두운데 내가 밝은 테마를 골랐다"가 제대로 동작한다. */
+   "OS는 어두운데 내가 밝은 테마를 골랐다"가 제대로 동작한다.
+
+   --rule 은 눈으로만 구분하는 장식 괘선,
+   --line 은 입력칸·버튼처럼 "경계가 정보인" 곳에 쓰는 진한 선이다
+   (WCAG 1.4.11 은 UI 요소 경계에 3:1 을 요구한다. --rule 로는 모자란다.) */
 :root {
   color-scheme: light;
 
-  --bg: #f6f7f9;
-  --card: #ffffff;
-  --input-bg: #ffffff;
-  --line: #e3e6ea;
-  --text: #1c1f23;
-  --muted: #5f6875;
-  --accent: #2f6fed;
-  --accent-hover: #2559c4;
-  --accent-ink: #ffffff;       /* 파란 버튼 위 글자색 */
-  --disabled-bg: #c3ccdd;
-  --disabled-ink: #55607a;
-  --danger: #b3271b;
-  --ok: #1a6d3d;
-  --focus: #1b4fd8;
-  --warn-bg: #fff6da;
-  --warn-line: #f0d68a;
-  --warn-text: #6b4f00;
-  --shadow: 0 1px 2px rgba(16, 20, 28, 0.05);
-
-  /* 공감 버튼 */
-  --like: #c33b4c;
-  --like-bg: #fff1f1;
+  --bg: #F7F6F2;          /* 따뜻한 오프화이트 */
+  --surface: #EDEBE4;     /* 두 번째 면 (폼 · 배너) */
+  --ink: #1C1D1F;         /* 제목 · 본문 강조        15.6:1 */
+  --body: #4D4F54;        /* 본문                    7.6:1  */
+  --muted: #66635C;       /* 보조 · 메타             5.5:1  */
+  --rule: #D6D2C8;        /* 장식 괘선 */
+  --line: #8A857A;        /* 입력칸 · 버튼 테두리    3.1:1 (두 번째 면 위에서도) */
+  --accent: #D2572B;      /* 강조 (마크 · 포커스)    3.8:1  */
+  --accent-deep: #B5471F; /* 강조 글자 · 버튼 바탕   5.0:1 / 흰 글자 5.4:1 */
+  --accent-tint: rgba(210, 87, 43, 0.09);
+  --on-accent: #FFFFFF;
+  --field: #FDFCFA;
+  --danger: #A31C10;      /* 7.1:1 */
+  --ok: #1F6B41;          /* 6.0:1 */
 }
 
-/* ⚠️ 다크 팔레트 (1/2) — 아래 :root[data-theme="dark"] 블록과 항상 똑같이 유지할 것.
-   한쪽만 고치면 "OS가 다크일 때"와 "내가 직접 다크를 골랐을 때"의 색이 갈린다.
-   @media로 감싼 규칙과 안 감싼 규칙을 한 블록으로 합치는 문법이 CSS에 없고,
-   빌드 도구를 안 쓰기로 했으니 전처리기도 못 쓴다. 그래서 일부러 두 벌이다. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --bg: #11141a;
-    --card: #1a1e26;
-    --input-bg: #141920;
-    --line: #2b313b;
-    --text: #e7ebf0;
-    --muted: #a6b0bd;
-    --accent: #6f9cff;
-    --accent-hover: #8fb2ff;
-    --accent-ink: #0a0f1a;
-    --disabled-bg: #333a46;
-    --disabled-ink: #98a2b0;
-    --danger: #ff9b8f;
-    --ok: #58d19a;
-    --focus: #9dbcff;
-    --warn-bg: #3a2e0e;
-    --warn-line: #6b5615;
-    --warn-text: #f6de9d;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-
-    /* 공감 버튼 */
-    --like: #ff8a9b;
-    --like-bg: #2c1a1f;
+    --bg: #1A1917;
+    --surface: #23221F;
+    --ink: #F2F0EA;         /* 15.4:1 */
+    --body: #B9B6AD;        /* 8.7:1  */
+    --muted: #918D83;       /* 5.3:1  */
+    --rule: #33322E;
+    --line: #706D65;        /* 3.1:1 (두 번째 면 위에서도) */
+    --accent: #E8835F;      /* 6.6:1  */
+    --accent-deep: #E8835F;
+    --accent-tint: rgba(232, 131, 95, 0.14);
+    --on-accent: #1A1917;
+    --field: #1F1E1B;
+    --danger: #F0A08C;      /* 8.5:1  */
+    --ok: #6FD3A0;          /* 9.6:1  */
   }
 }
 
-/* ⚠️ 다크 팔레트 (2/2) — 위 @media 블록과 항상 똑같이 유지할 것. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #11141a;
-  --card: #1a1e26;
-  --input-bg: #141920;
-  --line: #2b313b;
-  --text: #e7ebf0;
-  --muted: #a6b0bd;
-  --accent: #6f9cff;
-  --accent-hover: #8fb2ff;
-  --accent-ink: #0a0f1a;
-  --disabled-bg: #333a46;
-  --disabled-ink: #98a2b0;
-  --danger: #ff9b8f;
-  --ok: #58d19a;
-  --focus: #9dbcff;
-  --warn-bg: #3a2e0e;
-  --warn-line: #6b5615;
-  --warn-text: #f6de9d;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bg: #1A1917;
+  --surface: #23221F;
+  --ink: #F2F0EA;
+  --body: #B9B6AD;
+  --muted: #918D83;
+  --rule: #33322E;
+  --line: #706D65;
+  --accent: #E8835F;
+  --accent-deep: #E8835F;
+  --accent-tint: rgba(232, 131, 95, 0.14);
+  --on-accent: #1A1917;
+  --field: #1F1E1B;
+  --danger: #F0A08C;
+  --ok: #6FD3A0;
+}
 
-  /* 공감 버튼 */
-  --like: #ff8a9b;
-  --like-bg: #2c1a1f;
+/* ── 활자 ─────────────────────────────────────────────────
+   한글·본문은 IBM Plex Sans KR, 숫자·시각·카운터는 JetBrains Mono.
+   웹폰트를 못 받아도 아래 대체 글꼴로 그대로 읽힌다. */
+:root {
+  --sans: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo",
+          "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* 숫자·시각·카운터만 모노. 한글이 본문으로 들어가는 자리엔 쓰지 않는다
+   (모노는 라틴 전용이라 한글이 대체 글꼴로 빠지면 자간이 벌어진다). */
+.count, .item-time, .total, .like-count, .eyebrow {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 body {
   margin: 0;
-  padding: 24px 16px 48px;   /* 모바일에서도 좌우 16px 여백 */
+  padding: 0;
   background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Apple SD Gothic Neo",
-               "Malgun Gothic", "Noto Sans KR", sans-serif;
-  line-height: 1.6;
+  color: var(--body);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
 }
 
-.wrap { max-width: 640px; margin: 0 auto; }
+.wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px 64px;   /* 모바일에서도 좌우 16px 여백 */
+}
+
+@media (min-width: 560px) {
+  .wrap { padding: 0 24px 96px; }
+}
 
 /* ── 키보드 접근성 ─────────────────────────────────────────
    포커스 표시는 절대 지우지 않는다. 마우스로 눌렀을 때만 안 보이게
-   :focus-visible을 쓴다. */
+   :focus-visible 을 쓴다. */
 :focus-visible {
-  /* outline은 요소의 border-radius를 알아서 따라간다.
-     여기서 border-radius를 적으면 요소 모양 자체가 바뀌니 적지 않는다. */
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--accent-deep);
   outline-offset: 2px;
+  border-radius: 1px;
 }
 
 .skip-link {
   position: absolute;
   left: 16px;
-  top: -60px;               /* 평소엔 화면 위로 숨겨 둔다 */
+  top: -64px;               /* 평소엔 화면 위로 숨겨 둔다 */
   z-index: 10;
   padding: 10px 14px;
-  background: var(--card);
-  color: var(--text);
+  background: var(--surface);
+  color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: 8px;
   font-size: 14px;
   text-decoration: none;
 }
-.skip-link:focus { top: 16px; }   /* Tab을 누르면 내려온다 */
+.skip-link:focus { top: 16px; }   /* Tab 을 누르면 내려온다 */
 
 /* 눈에는 안 보이지만 스크린리더는 읽는 텍스트 */
-.visually-hidden {
+.visually-hidden,
+.sr-only {
   position: absolute;
   width: 1px; height: 1px;
   margin: -1px; padding: 0;
@@ -147,171 +153,261 @@ body {
   border: 0;
 }
 
+/* ── 작은 라벨 (섹션 머리글 · 입력 라벨) ───────────────── */
+.eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 /* ── 헤더 ──────────────────────────────────────────────── */
+.head {
+  padding: 40px 0 24px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 32px;
+}
+
+@media (min-width: 560px) {
+  .head { padding: 72px 0 28px; margin-bottom: 44px; }
+}
+
+.head-title { min-width: 0; }
+
 .head-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
 }
-.head h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.5px; }
-.head .sub { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
 
-/* ── 테마 토글 (우측 상단) ─────────────────────────────── */
+.head h1 {
+  margin: 10px 0 0;
+  font-family: var(--sans);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+
+@media (min-width: 560px) {
+  .head h1 { font-size: 42px; }
+}
+
+/* 제목 옆 강조 마침표 하나. 강조색은 여기와 포커스·공감에만 쓴다. */
+.head h1::after {
+  content: ".";
+  color: var(--accent);
+}
+
+.head .sub {
+  margin: 10px 0 0;
+  max-width: 36em;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* ── 테마 토글 ─────────────────────────────────────────── */
 .theme-toggle {
   flex: none;
-  width: 44px;               /* 손가락으로 누르기 좋은 최소 크기 */
-  height: 44px;
+  width: 40px;               /* 손가락으로 누르기 좋은 크기 */
+  height: 40px;
+  margin-top: 2px;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--card);
-  color: var(--text);
-  box-shadow: var(--shadow);
-  font-size: 20px;
-  line-height: 1;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--body);
   cursor: pointer;
 }
-.theme-toggle:hover { border-color: var(--accent); }
-.theme-icon { display: block; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent-deep); }
+.theme-toggle svg { display: block; width: 17px; height: 17px; }
+
+/* 이모지 대신 인라인 SVG 두 개를 넣어 두고 테마에 맞는 쪽만 보여 준다.
+   색 토큰과 똑같이 :root → @media → [data-theme] 3단으로 갈아 끼운다. */
+.icon-moon { display: block; }
+.icon-sun { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon-moon { display: none; }
+  :root:not([data-theme="light"]) .icon-sun { display: block; }
+}
+
+:root[data-theme="dark"] .icon-moon { display: none; }
+:root[data-theme="dark"] .icon-sun { display: block; }
+:root[data-theme="light"] .icon-moon { display: block; }
+:root[data-theme="light"] .icon-sun { display: none; }
 
 /* ── 로컬 모드 안내 띠 ─────────────────────────────────── */
 .banner {
-  margin: 0 0 16px;
-  padding: 10px 12px;
-  background: var(--warn-bg);
-  border: 1px solid var(--warn-line);
-  border-radius: 8px;
-  color: var(--warn-text);
-  font-size: 13px;
+  margin: 0 0 28px;
+  padding: 12px 14px 12px 16px;
+  background: var(--surface);
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.6;
 }
 .banner[hidden] { display: none; }
 
 /* ── 입력 폼 ───────────────────────────────────────────── */
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 28px;
-  box-shadow: var(--shadow);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 20px 18px;
+  margin: 0 0 44px;
 }
 
-.field { margin-bottom: 12px; }
+@media (min-width: 560px) {
+  .card { padding: 26px 24px; }
+}
 
-.field label {
+.field { margin-bottom: 18px; }
+
+.field label,
+.search label {
   display: block;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  margin-bottom: 7px;
 }
 
-.field input {
+.field input,
+.search input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  font: inherit;
-  font-size: 16px;          /* 16px 미만이면 iOS에서 화면이 확대됨 */
-  background: var(--input-bg);
-  color: var(--text);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 16px;          /* 16px 미만이면 iOS 에서 화면이 확대된다 */
+  line-height: 1.5;
+  background: var(--field);
+  color: var(--ink);
 }
 
-.field input::placeholder { color: var(--muted); opacity: 1; }
+.field input::placeholder,
+.search input::placeholder { color: var(--muted); opacity: 1; }
 
-.field input:focus-visible { border-color: var(--accent); }
+.field input:focus-visible,
+.search input:focus-visible { border-color: var(--accent-deep); }
 
 .count {
   display: block;
   text-align: right;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
-  margin-top: 2px;
+  margin-top: 6px;
 }
 
 button {
   width: 100%;
-  padding: 12px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font: inherit;
+  padding: 13px;
+  border: 1px solid var(--accent-deep);
+  border-radius: 2px;
+  background: var(--accent-deep);
+  color: var(--on-accent);
+  font-family: var(--sans);
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.4;
   cursor: pointer;
 }
 
-button:hover:not(:disabled) { background: var(--accent-hover); }
-button:disabled { background: var(--disabled-bg); color: var(--disabled-ink); cursor: not-allowed; }
+button:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+
+/* 두 번째 면 위에 놓이는 버튼이라, 비활성 바탕을 --surface 로 두면
+   카드 색과 같아져서 버튼이 통째로 사라져 보인다. 테두리만 남긴다. */
+button:disabled {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
 
 /* 토글은 위에서 따로 색을 잡아 뒀으니 공통 button 규칙을 덮어쓴다 */
-.theme-toggle:hover:not(:disabled) { background: var(--card); }
+.theme-toggle:hover:not(:disabled) { background: transparent; }
 
-.form-msg { margin: 10px 0 0; font-size: 13px; color: var(--danger); }
+.form-msg {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--danger);
+}
 .form-msg.ok { color: var(--ok); }
 .form-msg[hidden] { display: none; }
 
 /* ── 목록 ──────────────────────────────────────────────── */
-.list-area h2 { font-size: 16px; margin: 0 0 10px; }
-.total { color: var(--muted); font-weight: 400; font-size: 14px; }
-
-/* ── 검색 ───────────────────────────────────── */
-.search { margin: 0 0 10px; }
-
-.search label {
-  display: block;
+.list-area h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 16px;
   font-size: 13px;
   font-weight: 600;
-  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+  color: var(--ink);
 }
 
-.search input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  font: inherit;
-  font-size: 16px;          /* 16px 미만이면 iOS에서 화면이 확대됨 */
-  /* 색은 직접 적지 않는다. 다크 테마에서 검색창만 흰색으로 남으면 안 된다. */
-  background: var(--input-bg);
-  color: var(--text);
+.total { font-size: 12px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+
+/* ── 검색 ─────────────────────────────────────────────── */
+.search { margin: 0 0 20px; }
+
+.status {
+  margin: 0;
+  padding: 20px 0;
+  color: var(--muted);
+  font-size: 14px;
+  border-top: 1px solid var(--rule);
 }
-
-.search input::placeholder { color: var(--muted); opacity: 1; }
-
-/* 포커스 테두리는 전역 :focus-visible 규칙이 그린다. 여기선 border 색만 맞춘다.
-   (.field input 과 동작을 똑같이 가져가려고 :focus 가 아니라 :focus-visible) */
-.search input:focus-visible { border-color: var(--accent); }
-
-.status { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
 .status.error { color: var(--danger); }
 .status[hidden] { display: none; }
 
 .list { list-style: none; margin: 0; padding: 0; }
 
+/* 카드가 아니라 괘선으로 나눈다. 여백이 경계를 대신한다. */
 .item {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
+  padding: 20px 0;
+  border-top: 1px solid var(--rule);
 }
+.item:last-child { border-bottom: 1px solid var(--rule); }
 
 .item-top {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
-  margin-bottom: 2px;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
-.item-name { font-weight: 700; font-size: 14px; }
-.item-time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.item-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
 
-/* 긴 글/붙여넣은 URL이 카드를 뚫고 나가지 않게 */
+.item-time {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* 긴 글 / 붙여넣은 URL 이 화면을 뚫고 나가지 않게 */
 .item-msg {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--body);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -320,59 +416,68 @@ button:disabled { background: var(--disabled-bg); color: var(--disabled-ink); cu
 /* 위의 button 규칙이 width:100% 라서 여기서 되돌려 준다 */
 .like {
   width: auto;
-  margin-top: 8px;
-  padding: 4px 10px;
+  margin-top: 12px;
+  padding: 5px 10px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  /* 색은 직접 적지 않는다. 다크 테마에서 이 버튼만 흰색으로 남으면 안 된다. */
-  background: var(--card);
+  gap: 7px;
+  background: transparent;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 2px;
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.4;
 }
 
-/* 이미 누른 글은 hover 반응을 주지 않는다 */
+.like svg { display: block; width: 12px; height: 12px; }
+
+/* 이미 공감한 글은 aria-disabled 로 표시된다 (스크린리더가 상태를 읽을 수 있게).
+   그래서 hover 도 :disabled 가 아니라 이 속성을 보고 판단한다. */
 .like:not([aria-disabled="true"]):hover {
-  background: var(--like-bg);
-  border-color: var(--like);
-  color: var(--like);
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 /* 이미 누른 글: 눌렸다는 게 색으로도 보이게. 흐려지면 안 된다 */
 .like.liked,
 .like[aria-disabled="true"] {
-  background: var(--like-bg);
-  border-color: var(--like);
-  color: var(--like);
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-deep);
   cursor: default;
 }
 
-/* 응답 대기 중(진짜 disabled)만 흐려진다 */
-.like:disabled { opacity: 0.6; cursor: progress; }
+/* 공감한 글의 하트는 속을 채운다 (색맹이어도 모양으로 구분되게) */
+.like[aria-disabled="true"] svg { fill: currentColor; }
 
-.like-count { font-variant-numeric: tabular-nums; }
+.like-count { font-size: 12px; }
 
-/* ── 더 보기 ────────────────────────────────── */
+/* ── 더 보기 ───────────────────────────────────────────── */
 /* 가끔 누르는 버튼이라 제출 버튼보다 약하게 보이게 한다. */
 .more {
-  margin-top: 8px;
-  background: var(--card);
+  margin-top: 24px;
+  background: transparent;
   border: 1px solid var(--line);
-  color: var(--text);
+  color: var(--ink);
   font-weight: 600;
 }
 
-.more:hover:not(:disabled) { background: var(--bg); }
-.more:disabled { background: var(--card); color: var(--muted); }
+.more:hover:not(:disabled) {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+.more:disabled { background: transparent; border-color: var(--line); color: var(--muted); }
 .more[hidden] { display: none; }
 
+/* ── 바닥글 ────────────────────────────────────────────── */
+/* 목록 마지막 괘선이 이미 페이지를 닫아 주니 여기에 선을 하나 더 긋지 않는다 */
 .foot {
-  margin-top: 32px;
-  text-align: center;
+  margin-top: 40px;
   color: var(--muted);
   font-size: 12px;
+  letter-spacing: 0.01em;
 }

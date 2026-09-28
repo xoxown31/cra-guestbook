@@ -27,7 +27,6 @@ var bannerEl = $('banner');
 var totalEl = $('total');
 var liveEl = $('live');              // 스크린리더 전용 알림 영역
 var themeBtn = $('theme-toggle');
-var themeIcon = $('theme-icon');
 
 var searchInput = $('q');
 var moreBtn = $('more');
@@ -75,7 +74,7 @@ function applyTheme(theme, remember) {
   }
   var isDark = theme === 'dark';
   var label = isDark ? '밝은 테마로 바꾸기' : '어두운 테마로 바꾸기';
-  themeIcon.textContent = isDark ? '☀️' : '🌙';
+  // 해/달 아이콘은 index.html의 인라인 SVG 두 개를 CSS가 갈아 끼운다. 여기선 글자만 바꾼다.
   themeBtn.setAttribute('aria-label', label);
   themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
   themeBtn.title = label;
@@ -281,6 +280,21 @@ function makeItem(row) {
   return li;
 }
 
+// 하트 아이콘 SVG 하나. createElement가 아니라 NS 버전을 써야 SVG로 만들어진다.
+function heartIcon() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linejoin', 'round');
+  var path = document.createElementNS(NS, 'path');
+  path.setAttribute('d', 'M12 20.5 3.8 12.3a4.9 4.9 0 0 1 0-6.9 4.9 4.9 0 0 1 6.9 0l1.3 1.3 1.3-1.3a4.9 4.9 0 0 1 6.9 0 4.9 4.9 0 0 1 0 6.9z');
+  svg.appendChild(path);
+  return svg;
+}
+
 // 공감 버튼 하나. 숫자는 이 버튼 안의 span 하나만 바꿔서 갱신한다.
 // (목록 전체를 다시 그리면 다른 사람이 쓰던 스크롤 위치까지 튄다)
 function makeLikeBtn(row) {
@@ -296,8 +310,7 @@ function makeLikeBtn(row) {
   btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
   btn.title = liked ? '이미 공감했어요' : '공감하기';
 
-  var icon = document.createElement('span');
-  icon.textContent = '♥';
+  var icon = heartIcon();                    // 이모지 대신 SVG (기기마다 그림이 달라지지 않게)
   icon.setAttribute('aria-hidden', 'true');  // 스크린리더는 아래 '공감'만 읽는다
 
   var label = document.createElement('span');
@@ -338,7 +351,7 @@ function makeLikeBtn(row) {
 // 화면은 항상 상태(shownRows / totalCount / query)를 보고 다시 그린다.
 function render() {
   listEl.replaceChildren();             // 목록 비우기
-  totalEl.textContent = totalCount ? '(' + totalCount + ')' : '';
+  totalEl.textContent = totalCount ? String(totalCount) : '';   // 괄호 없이 숫자만 (모노 글꼴로 따로 보인다)
 
   if (!shownRows.length) {
     moreBtn.hidden = true;
