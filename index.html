@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>방명록</title>
+  <!-- 파비콘을 인라인으로. 안 넣으면 브라우저가 /favicon.ico를 찾다가 콘솔에 404를 남긴다. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%92%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="head">
+      <h1>방명록</h1>
+      <p class="sub">이름과 한 줄을 남겨 주세요. 모두가 볼 수 있어요.</p>
+    </header>
+
+    <!-- Supabase 설정이 없거나 연결이 안 될 때만 보이는 안내 띠 -->
+    <p id="banner" class="banner" hidden></p>
+
+    <form id="form" class="card" autocomplete="off">
+      <div class="field">
+        <label for="name">이름</label>
+        <input id="name" name="name" type="text" maxlength="20" placeholder="홍길동" required />
+        <span class="count"><span id="name-count">0</span>/20</span>
+      </div>
+
+      <div class="field">
+        <label for="message">한 줄</label>
+        <input id="message" name="message" type="text" maxlength="100" placeholder="안녕하세요!" required />
+        <span class="count"><span id="msg-count">0</span>/100</span>
+      </div>
+
+      <button id="submit" type="submit">남기기</button>
+      <p id="form-msg" class="form-msg" hidden></p>
+    </form>
+
+    <section class="list-area">
+      <h2>남겨진 글 <span id="total" class="total"></span></h2>
+      <p id="status" class="status">불러오는 중…</p>
+      <ul id="list" class="list"></ul>
+    </section>
+
+    <footer class="foot">CRA 스터디 · HTML/CSS/JS + Supabase</footer>
+  </main>
+
+  <!-- supabase-js v2 (CDN). 빌드 도구 없이 script 태그 하나로 끝. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
