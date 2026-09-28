@@ -7,7 +7,7 @@
 ## 이 레포가 뭔지
 
 이름 + 한 줄짜리 방명록. **라이브로 떠 있다** — https://cra-guestbook.netlify.app
-(Netlify 정적 호스팅 + 실제 Supabase 프로젝트). 배포 절차는 `DEPLOY.md`.
+(Netlify 정적 호스팅 + 실제 Supabase 프로젝트). **`main`에 push하면 자동 배포된다** — 절차는 `DEPLOY.md`.
 기능은 글 남기기 / 목록 / 공감(♥) / 검색 / 더 보기(20개씩) / 다크 모드 / 접근성.
 세 기능이 어떻게 합쳐졌는지와 리뷰 기록은 `REVIEW.md`.
 
@@ -16,6 +16,8 @@
 - **빌드 도구·프레임워크·번들러 금지.** 순수 HTML/CSS/바닐라 JS.
   `<script src>` 두 줄로 끝나야 한다 (1학년이 읽을 코드다).
   예외는 `index.html` `<head>`의 테마 인라인 5줄 하나뿐 — 첫 페인트 전에 실행돼야 해서다.
+- 딱 하나 있는 "빌드"는 배포용 `scripts/build-config.sh` 20여 줄(cp + 환경변수로 config.js 생성)이다.
+  번들러가 아니고, 로컬 개발에는 필요 없다. 설정은 `netlify.toml`. 자세한 건 `DEPLOY.md`.
 - 파일은 `index.html` / `css/style.css` / `js/config.js` / `js/app.js` / `supabase/schema.sql` 이 전부고
   새 파일은 꼭 필요할 때만 늘린다.
 - 사용자 입력은 **항상 `textContent`로** 넣는다 (`innerHTML` 금지). 이게 1번 규칙이다.

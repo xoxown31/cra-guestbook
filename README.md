@@ -98,20 +98,28 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
 
 다시 로컬에서 띄워 보고 노란 띠가 사라졌으면 성공.
 
-### ③ 배포 (Netlify)
+### ③ 배포 (Netlify) — 한 번만 연결해 두면 끝
 
-```bash
-npm install -g netlify-cli
-netlify login          # 브라우저로 로그인
-netlify init           # 처음 한 번, 사이트 만들기 (빌드 명령 없음 / publish dir = .)
-netlify deploy --prod  # 배포. 끝나면 URL이 출력된다
-```
+1. https://app.netlify.com → **Add new site → Import an existing project** → 내 GitHub 레포 선택
+2. 빌드 설정은 레포의 `netlify.toml`을 그대로 읽는다
+   (build command `bash scripts/build-config.sh` / publish directory `dist`)
+3. **Site configuration → Environment variables** 에 두 개를 넣는다
 
-빌드가 없으니 `netlify deploy --prod --dir .` 로 바로 쏴도 된다.
+   | 이름 | 값 |
+   |---|---|
+   | `SUPABASE_URL` | `https://<프로젝트ref>.supabase.co` |
+   | `SUPABASE_ANON_KEY` | anon public key |
+
+4. **Deploy site**
+
+이제 `main`에 push할 때마다 자동으로 다시 배포된다. `js/config.js`는 커밋하지 않고,
+배포할 때 `scripts/build-config.sh`가 위 환경변수로 만들어 준다.
+키를 바꾸는 법·배포 로그 보는 법·수동 배포 폴백은 [`DEPLOY.md`](DEPLOY.md)에 있다.
 
 **GitHub Pages도 된다.** 레포에 push → Settings → Pages → Branch `main` / 폴더 `/ (root)`.
-단, `js/config.js`가 `.gitignore`에 있어서 push되지 않으니
-Pages로 배포할 땐 config.js를 커밋하거나(=anon key 공개, 원래 공개돼도 되는 값) 워크플로에서 생성해야 한다.
+단, Pages에는 빌드 스텝이 없어서 `js/config.js`가 생기지 않는다(.gitignore라 push도 안 된다).
+config.js를 커밋하거나(=anon key 공개, 원래 공개돼도 되는 값) GitHub Actions에서 만들어 줘야 한다.
+그리고 Pages는 레포 전체를 올리므로 `.secrets/`가 있으면 위험하다.
 
 ---
 
