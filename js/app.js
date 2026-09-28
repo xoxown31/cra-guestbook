@@ -11,6 +11,7 @@ var TABLE = 'guestbook_entries';
 var MOCK_KEY = 'guestbook.mock.entries';  // 로컬 모드 저장소 키
 var RATE_KEY = 'guestbook.lastPostAt';    // 마지막 작성 시각
 var LIKED_KEY = 'guestbook.liked';        // 이 브라우저가 공감한 글 id 목록
+var THEME_KEY = 'guestbook.theme';        // 'light' | 'dark' (없으면 OS 설정을 따름)
 
 // ── DOM 요소 모으기 ────────────────────────────────────
 function $(id) { return document.getElementById(id); }
@@ -23,9 +24,78 @@ var listEl = $('list');
 var statusEl = $('status');
 var bannerEl = $('banner');
 var totalEl = $('total');
+var liveEl = $('live');              // 스크린리더 전용 알림 영역
+var themeBtn = $('theme-toggle');
+var themeIcon = $('theme-icon');
 
 var supa = null;    // Supabase 클라이언트 (로컬 모드면 null)
 var useMock = false; // true면 localStorage에 저장
+
+// ── 0-A. 스크린리더 알림 ────────────────────────────────
+// 눈에 보이는 변화(목록 갱신, 테마 변경)는 소리로도 알려 줘야 한다.
+// #live는 aria-live="polite"라서 여기 글자를 바꾸면 스크린리더가 읽어 준다.
+var announceTimer = null;
+function announce(text) {
+  if (!liveEl) return;
+  // 타이머를 안 들고 있으면 50ms 안에 두 번 불릴 때 앞 문장이 소리 없이 사라진다.
+  clearTimeout(announceTimer);
+  liveEl.textContent = '';   // 같은 문장이 연달아 와도 다시 읽히도록 한 번 비운다
+  announceTimer = setTimeout(function () { liveEl.textContent = text; }, 50);
+}
+
+// ── 0-B. 테마 (밝게 / 어둡게) ───────────────────────────
+// 색은 CSS 변수가 다 갖고 있다. 여기서는 <html data-theme="...">만 바꾼다.
+//   저장값 있음 → 그걸 쓴다 / 저장값 없음 → OS 설정(prefers-color-scheme)
+function osPrefersDark() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+function savedTheme() {
+  try {
+    var t = localStorage.getItem(THEME_KEY);
+    return (t === 'light' || t === 'dark') ? t : null;
+  } catch (e) { return null; }   // 시크릿 모드 등
+}
+
+function activeTheme() {
+  return document.documentElement.getAttribute('data-theme')
+      || savedTheme()
+      || (osPrefersDark() ? 'dark' : 'light');
+}
+
+// remember=true면 사용자가 직접 고른 것이라 localStorage에 남긴다.
+function applyTheme(theme, remember) {
+  document.documentElement.setAttribute('data-theme', theme);
+  if (remember) {
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* 무시 */ }
+  }
+  var isDark = theme === 'dark';
+  var label = isDark ? '밝은 테마로 바꾸기' : '어두운 테마로 바꾸기';
+  themeIcon.textContent = isDark ? '☀️' : '🌙';
+  themeBtn.setAttribute('aria-label', label);
+  themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+  themeBtn.title = label;
+}
+
+function initTheme() {
+  applyTheme(savedTheme() || (osPrefersDark() ? 'dark' : 'light'), false);
+
+  themeBtn.addEventListener('click', function () {
+    var next = activeTheme() === 'dark' ? 'light' : 'dark';
+    applyTheme(next, true);
+    announce(next === 'dark' ? '어두운 테마로 바꿨어요.' : '밝은 테마로 바꿨어요.');
+  });
+
+  // 아직 직접 고른 적이 없으면 OS 설정이 바뀔 때 따라간다.
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var follow = function () {
+      if (!savedTheme()) applyTheme(mq.matches ? 'dark' : 'light', false);
+    };
+    if (mq.addEventListener) mq.addEventListener('change', follow);
+    else if (mq.addListener) mq.addListener(follow);   // 옛 사파리
+  }
+}
 
 // ── 1. Supabase 설정이 실제 값인지 확인 ─────────────────
 // config.js를 안 채웠으면 placeholder가 그대로 들어있다.
@@ -179,7 +249,10 @@ function makeLikeBtn(row) {
   var btn = document.createElement('button');
   btn.type = 'button';                  // form 안이 아니어도 습관적으로 명시
   btn.className = liked ? 'like liked' : 'like';
-  btn.disabled = liked;
+  // disabled를 쓰면 브라우저가 접근성 트리에서 빼 버려서, 아래 aria-pressed와
+  // '공감' 라벨을 스크린리더가 아예 못 읽는다. 눈으로 보는 사람만 상태를 아는 꼴.
+  // 그래서 "이미 눌렀음"은 aria-disabled로 표시하고 동작만 핸들러에서 막는다.
+  btn.setAttribute('aria-disabled', liked ? 'true' : 'false');
   btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
   btn.title = liked ? '이미 공감했어요' : '공감하기';
 
@@ -188,7 +261,7 @@ function makeLikeBtn(row) {
   icon.setAttribute('aria-hidden', 'true');  // 스크린리더는 아래 '공감'만 읽는다
 
   var label = document.createElement('span');
-  label.className = 'sr-only';
+  label.className = 'visually-hidden';
   label.textContent = '공감';
 
   var count = document.createElement('span');
@@ -200,14 +273,18 @@ function makeLikeBtn(row) {
   btn.appendChild(count);
 
   btn.addEventListener('click', function () {
-    btn.disabled = true;                // 응답 오기 전 연타부터 막는다
+    if (btn.getAttribute('aria-disabled') === 'true') return;   // 이미 공감한 글
+    btn.disabled = true;                // 응답 오기 전 연타부터 막는다 (여긴 진짜 disabled가 맞다)
     likeEntry(row.id)
       .then(function (next) {
         count.textContent = String(next);
         markLiked(row.id);
+        btn.disabled = false;
         btn.className = 'like liked';
+        btn.setAttribute('aria-disabled', 'true');
         btn.setAttribute('aria-pressed', 'true');
         btn.title = '이미 공감했어요';
+        announce('공감했어요. 지금 ' + next + '개.');
       })
       .catch(function (err) {
         btn.disabled = false;           // 실패하면 다시 누를 수 있게 되돌린다
@@ -224,12 +301,14 @@ function render(rows) {
 
   if (!rows.length) {
     showStatus('아직 아무도 안 남겼어요. 첫 번째가 되어 보세요!');
+    announce('남겨진 글이 없어요.');
     return;
   }
   hideStatus();
   for (var i = 0; i < rows.length; i++) {
     listEl.appendChild(makeItem(rows[i]));
   }
+  announce('글 ' + rows.length + '개를 불러왔어요.');
 }
 
 function showStatus(text, isError) {
@@ -263,6 +342,12 @@ function refresh() {
   return fetchEntries()
     .then(render)
     .catch(function (err) {
+      // likes 컬럼이 없으면(스키마를 다시 안 돌린 경우) 목록 전체가 실패한다.
+      // 그대로 두면 "연결 실패 → 로컬 모드"로 떨어져서 데이터가 날아간 것처럼 보인다.
+      if (!useMock && /likes/.test(err.message)) {
+        showStatus('supabase/schema.sql 을 한 번 더 Run 해 주세요 (likes 컬럼이 없습니다)', true);
+        return;
+      }
       // Supabase가 안 되면 로컬 모드로 떨어져서 발표는 계속 되게 한다.
       if (!useMock) {
         goMock('연결 실패: ' + err.message);
@@ -327,6 +412,7 @@ function bindCounterRefresh() {
 
 // ── 9. 시작 ─────────────────────────────────────────────
 function start() {
+  initTheme();
   bindCounter(nameInput, 'name-count');
   bindCounter(msgInput, 'msg-count');
 
