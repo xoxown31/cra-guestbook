@@ -33,6 +33,9 @@ var moreBtn = $('more');
 
 var supa = null;    // Supabase 클라이언트 (로컬 모드면 null)
 var useMock = false; // true면 localStorage에 저장
+// likes 컬럼이 있는지. schema.sql을 다시 안 돌린 프로젝트엔 없다.
+// 없으면 공감 버튼만 감추고 목록은 정상으로 보여 준다 (목록까지 죽으면 안 된다).
+var likesReady = true;
 
 // ── 0-A. 스크린리더 알림 ────────────────────────────────
 // 눈에 보이는 변화(목록 갱신, 테마 변경)는 소리로도 알려 줘야 한다.
@@ -169,8 +172,10 @@ function fetchPage(q, offset, limit) {
 
   // 서버에서 거르고 잘라서 필요한 만큼만 받는다.
   // 전부 받아 놓고 JS로 거르면 글이 1만 개일 때 1만 개를 다 내려받게 된다.
+  var cols = likesReady ? 'id,name,message,created_at,likes' : 'id,name,message,created_at';
+
   var req = supa.from(TABLE)
-    .select('id,name,message,created_at,likes', { count: 'exact' })
+    .select(cols, { count: 'exact' })
     .order('created_at', { ascending: false });   // 최신순
 
   if (q) req = req.or('name.ilike.' + likePattern(q) + ',message.ilike.' + likePattern(q));
@@ -180,6 +185,17 @@ function fetchPage(q, offset, limit) {
       if (res.error) throw new Error(res.error.message);
       var rows = res.data || [];
       return { rows: rows, total: typeof res.count === 'number' ? res.count : rows.length };
+    })
+    .catch(function (err) {
+      // likes 컬럼이 없는 프로젝트: 목록까지 통째로 실패한다.
+      // 공감만 끄고 컬럼 없이 한 번 더 받아 온다. 글 목록은 계속 보여야 한다.
+      if (likesReady && /likes/.test(err.message)) {
+        likesReady = false;
+        bannerEl.hidden = false;
+        bannerEl.textContent = '공감 기능은 꺼져 있어요 — supabase/schema.sql 을 한 번 더 Run 하면 켜집니다.';
+        return fetchPage(q, offset, limit);
+      }
+      throw err;
     });
 }
 
@@ -276,7 +292,7 @@ function makeItem(row) {
 
   li.appendChild(top);
   li.appendChild(msg);
-  li.appendChild(makeLikeBtn(row));
+  if (likesReady) li.appendChild(makeLikeBtn(row));   // 컬럼이 없으면 버튼도 없다
   return li;
 }
 
@@ -414,12 +430,6 @@ function refresh() {
       render();
     })
     .catch(function (err) {
-      // likes 컬럼이 없으면(스키마를 다시 안 돌린 경우) 목록 전체가 실패한다.
-      // 그대로 두면 "연결 실패 → 로컬 모드"로 떨어져서 데이터가 날아간 것처럼 보인다.
-      if (!useMock && /likes/.test(err.message)) {
-        showStatus('supabase/schema.sql 을 한 번 더 Run 해 주세요 (likes 컬럼이 없습니다)', true);
-        return;
-      }
       // Supabase가 안 되면 로컬 모드로 떨어져서 발표는 계속 되게 한다.
       if (!useMock) {
         goMock('연결 실패: ' + err.message);

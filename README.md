@@ -7,28 +7,54 @@
 > 이게 증명하는 것: **정적 페이지 + 외부 DB만으로도 진짜 CRUD 서비스가 된다.**
 > 서버를 직접 안 짜도 된다.
 
+라이브: **https://cra-guestbook.netlify.app**
+(스크린샷: `docs/shot-desktop.png` · `docs/shot-mobile.png`)
+
+## 기능
+
+| 기능 | 어디에 | 한 줄 설명 |
+|---|---|---|
+| 글 남기기 / 목록 | `js/app.js` | 이름 20자 · 한 줄 100자. 10초에 1개(도배 방지) |
+| 공감(♥) | `js/app.js` + `supabase/schema.sql` | UPDATE 정책을 여는 대신 `likes+1`만 하는 `like_entry()` 함수만 열었다. 중복은 `localStorage`로 막는다 |
+| 검색 | `js/app.js` | 이름·내용 부분일치. Supabase면 서버에서(`ilike`), 로컬 모드면 같은 규칙을 JS로 |
+| 더 보기 | `js/app.js` | 20개씩. 서버 페이징(`range`) |
+| 다크 모드 | `css/style.css` + `js/app.js` | CSS 변수 3단 우선순위. `<head>` 인라인 5줄로 흰 화면 번쩍임 방지 |
+| 접근성 | `index.html` + `css/style.css` | 랜드마크 · 건너뛰기 링크 · `aria-live` 알림 · `:focus-visible` |
+| 로컬 모드 폴백 | `js/app.js` | 설정이 없거나 연결이 실패하면 localStorage로 자동 전환 |
+
 ## 파일 구조
 
 ```
-index.html            화면 구조
-css/style.css         스타일
-js/config.js          Supabase URL / anon key  (← .gitignore 됨, 직접 만들어야 함)
-js/config.example.js  config.js의 견본
-js/app.js             전부. 조회 / 작성 / 렌더링
-supabase/schema.sql   테이블 + RLS 정책
+index.html                    화면 구조
+css/style.css                 스타일 (색은 전부 :root의 CSS 변수)
+js/config.js                  Supabase URL / anon key  (← .gitignore 됨, 직접 만들어야 함)
+js/config.example.js          config.js의 견본
+js/app.js                     전부. 조회 / 작성 / 공감 / 검색 / 페이징 / 테마
+supabase/schema.sql           테이블 + RLS 정책 (= 항상 최신 전체 모습)
+supabase/migrations/*.sql     실제로 적용한 변경분을 순서대로
+DEPLOY.md                     배포(Netlify + Supabase) 상세
+REVIEW.md                     세 기능 브랜치 리뷰·머지 기록
+AGENTS.md                     에이전트가 이 레포에서 지킬 규칙
 ```
 
-## 로컬에서 실행
-
-`file://` 로 열면 안 된다. 반드시 웹서버로 띄운다.
+## 로컬에서 실행 (한 줄)
 
 ```bash
-npx serve .
-# 또는
-python3 -m http.server 8000
+cp -n js/config.example.js js/config.js && python3 -m http.server 8000
 ```
 
-→ 브라우저에서 http://localhost:8000 (`npx serve`는 보통 3000번 포트)
+→ http://localhost:8000 . `js/config.js`가 placeholder면 **로컬 모드**로 떠서
+Supabase 계정 없이 바로 만져 볼 수 있다. `file://` 로 열면 안 된다.
+
+## 다시 배포하기 (한 줄)
+
+```bash
+export PATH=/home/xoxown/.local/node/bin:$PATH && npx --yes netlify-cli deploy --dir ~/projects/cra_study/guestbook-dist --site 21184a7e-2a2e-4925-9432-e1d1873af0ec --prod --no-build
+```
+
+단, **그 전에 바뀐 파일을 `guestbook-dist/`로 복사해야 한다.**
+레포 루트를 그대로 올리면 안 된다(루트엔 `.secrets/`가 있다). 복사 목록·REST API 방식·
+토큰 위치·주의사항은 전부 **[`DEPLOY.md`](DEPLOY.md)** 에 있다. 여기서 반복하지 않는다.
 
 ### 로컬 모드 (Supabase 없이 바로 데모)
 
