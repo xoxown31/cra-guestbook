@@ -33,6 +33,12 @@ alter table public.guestbook_entries add  constraint likes_nonneg check (likes >
 create index if not exists guestbook_entries_created_at_idx
   on public.guestbook_entries (created_at desc);
 
+-- 검색(ilike '%글자%')은 위 인덱스를 못 쓴다. 앞이 아니라 가운데를 찾기 때문.
+-- 글이 수천 개를 넘어가서 느려지면 그때 아래 두 줄을 실행하면 된다. (지금은 불필요)
+--   create extension if not exists pg_trgm;
+--   create index if not exists guestbook_entries_search_idx
+--     on public.guestbook_entries using gin ((name || ' ' || message) gin_trgm_ops);
+
 -- ============================================================
 -- 2) RLS (Row Level Security) — 이 파일에서 제일 중요한 부분
 -- ============================================================

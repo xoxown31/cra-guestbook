@@ -5,7 +5,8 @@
 // ── 상수 ───────────────────────────────────────────────
 var MAX_NAME = 20;          // 이름 최대 길이
 var MAX_MSG = 100;          // 내용 최대 길이
-var LIST_LIMIT = 50;        // 한 번에 보여줄 개수
+var PAGE_SIZE = 20;         // 한 번에 보여줄 개수 ("더 보기" 한 번에 늘어나는 개수)
+var SEARCH_WAIT_MS = 200;   // 타자 칠 때마다 요청하지 않으려고 잠깐 기다리는 시간
 var RATE_LIMIT_MS = 10000;  // 도배 방지: 10초에 1개
 var TABLE = 'guestbook_entries';
 var MOCK_KEY = 'guestbook.mock.entries';  // 로컬 모드 저장소 키
@@ -27,6 +28,9 @@ var totalEl = $('total');
 var liveEl = $('live');              // 스크린리더 전용 알림 영역
 var themeBtn = $('theme-toggle');
 var themeIcon = $('theme-icon');
+
+var searchInput = $('q');
+var moreBtn = $('more');
 
 var supa = null;    // Supabase 클라이언트 (로컬 모드면 null)
 var useMock = false; // true면 localStorage에 저장
@@ -97,6 +101,13 @@ function initTheme() {
   }
 }
 
+// ── 목록 상태 ──────────────────────────────────────────
+var query = '';       // 지금 검색어 ('' 이면 전체)
+var shownRows = [];   // 지금 화면에 그려져 있는 행들
+var totalCount = 0;   // 검색 조건에 맞는 전체 개수 (더 보기 버튼 판단용)
+var reqSeq = 0;       // 요청 번호. 늦게 도착한 옛날 응답을 버리는 데 쓴다
+var searchTimer = null;
+
 // ── 1. Supabase 설정이 실제 값인지 확인 ─────────────────
 // config.js를 안 채웠으면 placeholder가 그대로 들어있다.
 function isConfigured() {
@@ -131,16 +142,45 @@ function mockSave(rows) {
 }
 
 // ── 3. 데이터 읽기 / 쓰기 ───────────────────────────────
-function fetchEntries() {
-  if (useMock) return Promise.resolve(mockLoad().slice(0, LIST_LIMIT));
+// 로컬 모드용 검색: 이름이나 내용에 검색어가 들어 있으면 통과 (대소문자 무시)
+function matches(row, q) {
+  if (!q) return true;
+  // PostgREST는 ilike 값의 '*'를 '%'(아무 글자나)로 해석한다.
+  // 로컬 모드도 같게 맞춰야 같은 검색어에 두 모드 결과가 갈리지 않는다.
+  var escaped = q.replace(/[.*+?^${}()|[\]\\]/g, function (c) { return c === '*' ? '[[STAR]]' : '\\' + c; });
+  var re = new RegExp(escaped.split('[[STAR]]').join('.*'), 'i');
+  return re.test(String(row.name)) || re.test(String(row.message));
+}
 
-  return supa.from(TABLE)
-    .select('id,name,message,created_at,likes')
-    .order('created_at', { ascending: false })   // 최신순
-    .limit(LIST_LIMIT)
+// PostgREST의 or(...)는 쉼표·괄호로 조건을 나눈다.
+// 검색어를 그냥 붙이면 쉼표 하나에 쿼리가 깨지므로 큰따옴표로 감싼다.
+// 그 안에서는 \ 와 " 만 백슬래시로 escape 해 주면 된다.
+// (% 와 _ 는 LIKE 와일드카드로 동작한다. 방명록에선 그냥 둬도 무해하다.)
+function likePattern(q) {
+  return '"%' + q.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '%"';
+}
+
+// q에 맞는 행을 offset 번째부터 limit개 가져온다. { rows, total } 을 돌려준다.
+// total이 있어야 "더 보기"를 보여줄지 말지 알 수 있다.
+function fetchPage(q, offset, limit) {
+  if (useMock) {
+    var all = mockLoad().filter(function (row) { return matches(row, q); });
+    return Promise.resolve({ rows: all.slice(offset, offset + limit), total: all.length });
+  }
+
+  // 서버에서 거르고 잘라서 필요한 만큼만 받는다.
+  // 전부 받아 놓고 JS로 거르면 글이 1만 개일 때 1만 개를 다 내려받게 된다.
+  var req = supa.from(TABLE)
+    .select('id,name,message,created_at,likes', { count: 'exact' })
+    .order('created_at', { ascending: false });   // 최신순
+
+  if (q) req = req.or('name.ilike.' + likePattern(q) + ',message.ilike.' + likePattern(q));
+
+  return req.range(offset, offset + limit - 1)
     .then(function (res) {
       if (res.error) throw new Error(res.error.message);
-      return res.data || [];
+      var rows = res.data || [];
+      return { rows: rows, total: typeof res.count === 'number' ? res.count : rows.length };
     });
 }
 
@@ -295,20 +335,31 @@ function makeLikeBtn(row) {
   return btn;
 }
 
-function render(rows) {
+// 화면은 항상 상태(shownRows / totalCount / query)를 보고 다시 그린다.
+function render() {
   listEl.replaceChildren();             // 목록 비우기
-  totalEl.textContent = rows.length ? '(' + rows.length + ')' : '';
+  totalEl.textContent = totalCount ? '(' + totalCount + ')' : '';
 
-  if (!rows.length) {
-    showStatus('아직 아무도 안 남겼어요. 첫 번째가 되어 보세요!');
-    announce('남겨진 글이 없어요.');
+  if (!shownRows.length) {
+    moreBtn.hidden = true;
+    // 검색 중이면 "결과 없음", 아니면 원래 빈 목록 문구
+    var emptyMsg = query
+      ? '\u2018' + query + '\u2019 에 대한 검색 결과가 없어요.'   // showStatus는 textContent라 안전
+      : '아직 아무도 안 남겼어요. 첫 번째가 되어 보세요!';
+    showStatus(emptyMsg);
+    announce(emptyMsg);
     return;
   }
   hideStatus();
-  for (var i = 0; i < rows.length; i++) {
-    listEl.appendChild(makeItem(rows[i]));
+  for (var i = 0; i < shownRows.length; i++) {
+    listEl.appendChild(makeItem(shownRows[i]));
   }
-  announce('글 ' + rows.length + '개를 불러왔어요.');
+  // 아직 안 받아온 게 남아 있을 때만 버튼을 보여 준다.
+  moreBtn.hidden = shownRows.length >= totalCount;
+  // 검색 중이면 "몇 건 중 몇 개를 보고 있는지"까지 읽어 줘야 말이 된다.
+  announce(query
+    ? '\u2018' + query + '\u2019 검색 결과 ' + totalCount + '개 중 ' + shownRows.length + '개를 보여 주고 있어요.'
+    : '글 ' + shownRows.length + '개를 불러왔어요. 전체 ' + totalCount + '개.');
 }
 
 function showStatus(text, isError) {
@@ -337,10 +388,18 @@ function timeAgo(iso) {
 }
 
 // ── 6. 목록 새로고침 ────────────────────────────────────
+// 첫 페이지부터 다시 (검색어가 바뀌었거나 새 글을 남겼을 때)
 function refresh() {
+  var my = ++reqSeq;
   showStatus('불러오는 중…');
-  return fetchEntries()
-    .then(render)
+  moreBtn.hidden = true;
+  return fetchPage(query, 0, PAGE_SIZE)
+    .then(function (page) {
+      if (my !== reqSeq) return;        // 더 최근 요청이 있으면 이 결과는 버린다
+      shownRows = page.rows;
+      totalCount = page.total;
+      render();
+    })
     .catch(function (err) {
       // likes 컬럼이 없으면(스키마를 다시 안 돌린 경우) 목록 전체가 실패한다.
       // 그대로 두면 "연결 실패 → 로컬 모드"로 떨어져서 데이터가 날아간 것처럼 보인다.
@@ -351,10 +410,53 @@ function refresh() {
       // Supabase가 안 되면 로컬 모드로 떨어져서 발표는 계속 되게 한다.
       if (!useMock) {
         goMock('연결 실패: ' + err.message);
-        return fetchEntries().then(render);
+        return fetchPage(query, 0, PAGE_SIZE).then(function (page) {
+          if (my !== reqSeq) return;    // 연결 실패는 몇 초 걸린다. 그 사이 검색어가 바뀌었을 수 있다
+          shownRows = page.rows;
+          totalCount = page.total;
+          render();
+        });
       }
       showStatus('목록을 불러오지 못했어요: ' + err.message, true);
     });
+}
+
+// 다음 20개를 뒤에 이어 붙인다.
+function loadMore() {
+  var my = ++reqSeq;
+  moreBtn.disabled = true;
+  moreBtn.textContent = '불러오는 중…';
+  return fetchPage(query, shownRows.length, PAGE_SIZE)
+    .then(function (page) {
+      if (my !== reqSeq) return;
+      // offset 페이징이라, 1페이지를 받은 뒤 새 글이 하나 올라오면 뒤가 한 칸씩 밀려
+      // 같은 글이 2페이지 맨 앞에 다시 온다. id로 한 번 걸러 준다.
+      var seen = {};
+      shownRows.forEach(function (r) { seen[r.id] = true; });
+      shownRows = shownRows.concat(page.rows.filter(function (r) { return !seen[r.id]; }));
+      totalCount = page.total;
+      render();
+    })
+    .catch(function (err) {
+      if (my !== reqSeq) return;        // 성공 경로와 똑같이, 늦게 온 옛 응답은 버린다
+      showStatus('더 불러오지 못했어요: ' + err.message, true);
+    })
+    .then(function () {
+      moreBtn.disabled = false;
+      moreBtn.textContent = '더 보기';
+    });
+}
+
+// ── 6-1. 검색창 ─────────────────────────────────────────
+// 한 글자 칠 때마다 요청하면 서버가 아깝다. 잠깐 멈췄을 때만 보낸다.
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(function () {
+    var next = searchInput.value.trim();
+    if (next === query) return;         // 공백만 늘었다면 다시 안 부른다
+    query = next;
+    refresh();                          // 지우면 query가 ''라 원래 목록으로 돌아온다
+  }, SEARCH_WAIT_MS);
 }
 
 // ── 7. 글자 수 표시 ─────────────────────────────────────
@@ -415,6 +517,10 @@ function start() {
   initTheme();
   bindCounter(nameInput, 'name-count');
   bindCounter(msgInput, 'msg-count');
+
+  searchInput.addEventListener('input', onSearchInput);
+  searchInput.addEventListener('search', onSearchInput);  // type=search의 X 버튼
+  moreBtn.addEventListener('click', loadMore);
 
   if (!isConfigured()) {
     goMock();

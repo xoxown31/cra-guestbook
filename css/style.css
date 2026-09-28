@@ -255,6 +255,34 @@ button:disabled { background: var(--disabled-bg); color: var(--disabled-ink); cu
 .list-area h2 { font-size: 16px; margin: 0 0 10px; }
 .total { color: var(--muted); font-weight: 400; font-size: 14px; }
 
+/* ── 검색 ───────────────────────────────────── */
+.search { margin: 0 0 10px; }
+
+.search label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.search input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 16px;          /* 16px 미만이면 iOS에서 화면이 확대됨 */
+  /* 색은 직접 적지 않는다. 다크 테마에서 검색창만 흰색으로 남으면 안 된다. */
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.search input::placeholder { color: var(--muted); opacity: 1; }
+
+/* 포커스 테두리는 전역 :focus-visible 규칙이 그린다. 여기선 border 색만 맞춘다.
+   (.field input 과 동작을 똑같이 가져가려고 :focus 가 아니라 :focus-visible) */
+.search input:focus-visible { border-color: var(--accent); }
+
 .status { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
 .status.error { color: var(--danger); }
 .status[hidden] { display: none; }
@@ -327,6 +355,20 @@ button:disabled { background: var(--disabled-bg); color: var(--disabled-ink); cu
 .like:disabled { opacity: 0.6; cursor: progress; }
 
 .like-count { font-variant-numeric: tabular-nums; }
+
+/* ── 더 보기 ────────────────────────────────── */
+/* 가끔 누르는 버튼이라 제출 버튼보다 약하게 보이게 한다. */
+.more {
+  margin-top: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.more:hover:not(:disabled) { background: var(--bg); }
+.more:disabled { background: var(--card); color: var(--muted); }
+.more[hidden] { display: none; }
 
 .foot {
   margin-top: 32px;
