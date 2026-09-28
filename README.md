@@ -109,6 +109,33 @@ RLS를 **안 켜면**, 키를 주운 사람이 `delete from guestbook_entries` �
 `innerHTML`에 넣으면 `<img src=x onerror=alert(1)>` 같은 입력이 **실행된다**.
 방명록처럼 남의 글을 화면에 뿌리는 서비스에선 이게 1번 실수다.
 
+## 테마(다크 모드)와 접근성
+
+우측 상단 동그란 버튼으로 밝은/어두운 테마를 바꾼다. 고른 값은 `localStorage`의
+`guestbook.theme`에 남아서 새로고침해도 유지되고, 고른 적이 없으면 OS 설정
+(`prefers-color-scheme`)을 그대로 따른다.
+
+색은 전부 `css/style.css` 맨 위의 CSS 변수에 모아 뒀다. 두 테마가 **같은 변수 이름**을
+쓰기 때문에 아래 규칙들은 색을 한 번도 직접 적지 않는다. 적용 순서는 이렇다.
+
+```
+:root                                  밝은 테마 (기본값)
+@media (prefers-color-scheme: dark)    OS가 어두우면 어두운 테마
+  :root:not([data-theme="light"])      ← 사용자가 밝은 테마를 고르면 이 규칙이 빠진다
+:root[data-theme="dark"]               사용자가 직접 고른 값이 항상 이긴다
+```
+
+`index.html`의 `<head>`에 다섯 줄짜리 인라인 스크립트가 하나 있는데, 저장해 둔 테마를
+**화면을 그리기 전에** 입혀서 밝은 화면이 번쩍이는 걸 막는 용도다. (빌드 도구는 여전히 없다)
+
+접근성 쪽으로 같이 챙긴 것:
+
+- 입력마다 `<label for>` 연결, 글자 수 안내는 `aria-describedby`로 묶음
+- 아이콘만 있는 테마 버튼에 `aria-label` + `aria-pressed` (누를 때마다 문구가 바뀐다)
+- 목록이 갱신되면 `aria-live="polite"` 영역이 "글 N개를 불러왔어요"를 읽어 준다
+- Tab 순서는 건너뛰기 링크 → 테마 버튼 → 이름 → 한 줄 → 남기기, 포커스 테두리는 항상 보인다
+- 문서 구조는 `header` / `main` / `footer` 랜드마크로 나눠 놨다
+
 ## 라이선스
 
 수업/스터디용. 각자 숙제에 그대로 복사해서 써도 됨.
