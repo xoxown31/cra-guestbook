@@ -1,0 +1,11 @@
+# 실제 키가 들어가는 파일은 커밋하지 않는다.
+# (anon key는 공개돼도 되는 값이지만, 각자 프로젝트 값이라 커밋할 이유가 없다)
+js/config.js
+
+# OS / 에디터 부스러기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+node_modules/
