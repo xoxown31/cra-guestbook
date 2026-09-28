@@ -32,8 +32,10 @@ js/config.example.js          config.js의 견본
 js/app.js                     전부. 조회 / 작성 / 공감 / 검색 / 페이징 / 테마
 supabase/schema.sql           테이블 + RLS 정책 (= 항상 최신 전체 모습)
 supabase/migrations/*.sql     실제로 적용한 변경분을 순서대로
+netlify.toml                  자동 배포 설정 (main push → 빌드 → 배포)
+scripts/build-config.sh       배포용 dist/ 를 만들고 환경변수로 config.js 를 생성
 DEPLOY.md                     배포(Netlify + Supabase) 상세
-REVIEW.md                     세 기능 브랜치 리뷰·머지 기록
+REVIEW.md                     기능 브랜치 4개 리뷰·머지 기록
 AGENTS.md                     에이전트가 이 레포에서 지킬 규칙
 ```
 
@@ -49,12 +51,14 @@ Supabase 계정 없이 바로 만져 볼 수 있다. `file://` 로 열면 안 �
 ## 다시 배포하기 (한 줄)
 
 ```bash
-export PATH=/home/xoxown/.local/node/bin:$PATH && npx --yes netlify-cli deploy --dir ~/projects/cra_study/guestbook-dist --site 21184a7e-2a2e-4925-9432-e1d1873af0ec --prod --no-build
+git push origin main
 ```
 
-단, **그 전에 바뀐 파일을 `guestbook-dist/`로 복사해야 한다.**
-레포 루트를 그대로 올리면 안 된다(루트엔 `.secrets/`가 있다). 복사 목록·REST API 방식·
-토큰 위치·주의사항은 전부 **[`DEPLOY.md`](DEPLOY.md)** 에 있다. 여기서 반복하지 않는다.
+끝이다. `main`에 push되면 Netlify가 레포를 clone해서 `scripts/build-config.sh`를 돌리고,
+올릴 파일만 `dist/`에 모은 뒤 배포한다. **키는 레포에 없다** — Netlify 환경변수
+(`SUPABASE_URL` / `SUPABASE_ANON_KEY`)로 `dist/js/config.js`를 그때 만든다.
+빌드 도구는 여전히 없고 쉘 스크립트 하나가 전부다. 설정은 `netlify.toml`,
+수동 배포·토큰 위치·문제 해결은 **[`DEPLOY.md`](DEPLOY.md)**.
 
 ### 로컬 모드 (Supabase 없이 바로 데모)
 
