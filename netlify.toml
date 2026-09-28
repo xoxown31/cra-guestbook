@@ -1,0 +1,12 @@
+# Netlify 자동 배포 설정.
+#
+# main 브랜치에 push(또는 PR 머지)가 되면 Netlify가
+#   1) 이 레포를 clone 하고
+#   2) 아래 command 를 실행한 다음
+#   3) publish 폴더 안의 내용을 https://cra-guestbook.netlify.app 에 올린다.
+#
+# 빌드 도구(webpack 같은 것)는 여전히 없다. 쉘 스크립트 한 개가 전부다.
+
+[build]
+  command = "bash scripts/build-config.sh"
+  publish = "dist"

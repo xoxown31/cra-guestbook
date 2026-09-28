@@ -11,3 +11,6 @@ Thumbs.db
 node_modules/
 .secrets/
 supabase/.temp/
+
+# 배포용으로 만들어지는 폴더 (scripts/build-config.sh 가 생성)
+dist/
