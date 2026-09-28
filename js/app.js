@@ -27,6 +27,7 @@ var bannerEl = $('banner');
 var totalEl = $('total');
 var liveEl = $('live');              // 스크린리더 전용 알림 영역
 var themeBtn = $('theme-toggle');
+var themeColorMeta = $('theme-color');   // 모바일 주소창 색
 
 var searchInput = $('q');
 var moreBtn = $('more');
@@ -78,6 +79,8 @@ function applyTheme(theme, remember) {
   var isDark = theme === 'dark';
   var label = isDark ? '밝은 테마로 바꾸기' : '어두운 테마로 바꾸기';
   // 해/달 아이콘은 index.html의 인라인 SVG 두 개를 CSS가 갈아 끼운다. 여기선 글자만 바꾼다.
+  // 모바일 브라우저 주소창 색. meta는 CSS 선택자를 못 쓰니 여기서 같이 맞춘다.
+  if (themeColorMeta) themeColorMeta.setAttribute('content', isDark ? '#1A1917' : '#F7F6F2');
   themeBtn.setAttribute('aria-label', label);
   themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
   themeBtn.title = label;
