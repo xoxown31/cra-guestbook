@@ -10,6 +10,7 @@ var RATE_LIMIT_MS = 10000;  // 도배 방지: 10초에 1개
 var TABLE = 'guestbook_entries';
 var MOCK_KEY = 'guestbook.mock.entries';  // 로컬 모드 저장소 키
 var RATE_KEY = 'guestbook.lastPostAt';    // 마지막 작성 시각
+var THEME_KEY = 'guestbook.theme';        // 'light' | 'dark' (없으면 OS 설정을 따름)
 
 // ── DOM 요소 모으기 ────────────────────────────────────
 function $(id) { return document.getElementById(id); }
@@ -22,9 +23,75 @@ var listEl = $('list');
 var statusEl = $('status');
 var bannerEl = $('banner');
 var totalEl = $('total');
+var liveEl = $('live');              // 스크린리더 전용 알림 영역
+var themeBtn = $('theme-toggle');
+var themeIcon = $('theme-icon');
 
 var supa = null;    // Supabase 클라이언트 (로컬 모드면 null)
 var useMock = false; // true면 localStorage에 저장
+
+// ── 0-A. 스크린리더 알림 ────────────────────────────────
+// 눈에 보이는 변화(목록 갱신, 테마 변경)는 소리로도 알려 줘야 한다.
+// #live는 aria-live="polite"라서 여기 글자를 바꾸면 스크린리더가 읽어 준다.
+function announce(text) {
+  if (!liveEl) return;
+  liveEl.textContent = '';   // 같은 문장이 연달아 와도 다시 읽히도록 한 번 비운다
+  setTimeout(function () { liveEl.textContent = text; }, 50);
+}
+
+// ── 0-B. 테마 (밝게 / 어둡게) ───────────────────────────
+// 색은 CSS 변수가 다 갖고 있다. 여기서는 <html data-theme="...">만 바꾼다.
+//   저장값 있음 → 그걸 쓴다 / 저장값 없음 → OS 설정(prefers-color-scheme)
+function osPrefersDark() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+function savedTheme() {
+  try {
+    var t = localStorage.getItem(THEME_KEY);
+    return (t === 'light' || t === 'dark') ? t : null;
+  } catch (e) { return null; }   // 시크릿 모드 등
+}
+
+function activeTheme() {
+  return document.documentElement.getAttribute('data-theme')
+      || savedTheme()
+      || (osPrefersDark() ? 'dark' : 'light');
+}
+
+// remember=true면 사용자가 직접 고른 것이라 localStorage에 남긴다.
+function applyTheme(theme, remember) {
+  document.documentElement.setAttribute('data-theme', theme);
+  if (remember) {
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* 무시 */ }
+  }
+  var isDark = theme === 'dark';
+  var label = isDark ? '밝은 테마로 바꾸기' : '어두운 테마로 바꾸기';
+  themeIcon.textContent = isDark ? '☀️' : '🌙';
+  themeBtn.setAttribute('aria-label', label);
+  themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+  themeBtn.title = label;
+}
+
+function initTheme() {
+  applyTheme(savedTheme() || (osPrefersDark() ? 'dark' : 'light'), false);
+
+  themeBtn.addEventListener('click', function () {
+    var next = activeTheme() === 'dark' ? 'light' : 'dark';
+    applyTheme(next, true);
+    announce(next === 'dark' ? '어두운 테마로 바꿨어요.' : '밝은 테마로 바꿨어요.');
+  });
+
+  // 아직 직접 고른 적이 없으면 OS 설정이 바뀔 때 따라간다.
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var follow = function () {
+      if (!savedTheme()) applyTheme(mq.matches ? 'dark' : 'light', false);
+    };
+    if (mq.addEventListener) mq.addEventListener('change', follow);
+    else if (mq.addListener) mq.addListener(follow);   // 옛 사파리
+  }
+}
 
 // ── 1. Supabase 설정이 실제 값인지 확인 ─────────────────
 // config.js를 안 채웠으면 placeholder가 그대로 들어있다.
@@ -129,12 +196,14 @@ function render(rows) {
 
   if (!rows.length) {
     showStatus('아직 아무도 안 남겼어요. 첫 번째가 되어 보세요!');
+    announce('남겨진 글이 없어요.');
     return;
   }
   hideStatus();
   for (var i = 0; i < rows.length; i++) {
     listEl.appendChild(makeItem(rows[i]));
   }
+  announce('글 ' + rows.length + '개를 불러왔어요.');
 }
 
 function showStatus(text, isError) {
@@ -232,6 +301,7 @@ function bindCounterRefresh() {
 
 // ── 9. 시작 ─────────────────────────────────────────────
 function start() {
+  initTheme();
   bindCounter(nameInput, 'name-count');
   bindCounter(msgInput, 'msg-count');
 
