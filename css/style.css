@@ -33,6 +33,10 @@
   --shadow: 0 1px 2px rgba(16, 20, 28, 0.05);
 }
 
+/* ⚠️ 다크 팔레트 (1/2) — 아래 :root[data-theme="dark"] 블록과 항상 똑같이 유지할 것.
+   한쪽만 고치면 "OS가 다크일 때"와 "내가 직접 다크를 골랐을 때"의 색이 갈린다.
+   @media로 감싼 규칙과 안 감싼 규칙을 한 블록으로 합치는 문법이 CSS에 없고,
+   빌드 도구를 안 쓰기로 했으니 전처리기도 못 쓴다. 그래서 일부러 두 벌이다. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
@@ -58,6 +62,7 @@
   }
 }
 
+/* ⚠️ 다크 팔레트 (2/2) — 위 @media 블록과 항상 똑같이 유지할 것. */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
@@ -97,9 +102,10 @@ body {
    포커스 표시는 절대 지우지 않는다. 마우스로 눌렀을 때만 안 보이게
    :focus-visible을 쓴다. */
 :focus-visible {
+  /* outline은 요소의 border-radius를 알아서 따라간다.
+     여기서 border-radius를 적으면 요소 모양 자체가 바뀌니 적지 않는다. */
   outline: 3px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 .skip-link {
