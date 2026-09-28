@@ -37,8 +37,18 @@
 
     <section class="list-area">
       <h2>남겨진 글 <span id="total" class="total"></span></h2>
+
+      <!-- 검색: 이름이나 내용에 그 글자가 든 항목만 남긴다 -->
+      <div class="search">
+        <label for="q">검색</label>
+        <input id="q" type="search" placeholder="이름이나 내용으로 검색" autocomplete="off" />
+      </div>
+
       <p id="status" class="status">불러오는 중…</p>
       <ul id="list" class="list"></ul>
+
+      <!-- 목록은 20개씩. 더 있을 때만 이 버튼이 보인다. -->
+      <button id="more" class="more" type="button" hidden>더 보기</button>
     </section>
 
     <footer class="foot">CRA 스터디 · HTML/CSS/JS + Supabase</footer>

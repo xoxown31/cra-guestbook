@@ -106,6 +106,33 @@ button:disabled { background: #a8b6d4; cursor: not-allowed; }
 .list-area h2 { font-size: 16px; margin: 0 0 10px; }
 .total { color: var(--muted); font-weight: 400; font-size: 14px; }
 
+/* ── 검색 ───────────────────────────────────── */
+.search { margin: 0 0 10px; }
+
+.search label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.search input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 16px;          /* 16px 미만이면 iOS에서 화면이 확대됨 */
+  background: #fff;
+  color: inherit;
+}
+
+.search input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
 .status { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
 .status.error { color: var(--danger); }
 .status[hidden] { display: none; }
@@ -138,6 +165,20 @@ button:disabled { background: #a8b6d4; cursor: not-allowed; }
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
+/* ── 더 보기 ────────────────────────────────── */
+/* 가끔 누르는 버튼이라 제출 버튼보다 약하게 보이게 한다. */
+.more {
+  margin-top: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.more:hover:not(:disabled) { background: #eef1f5; }
+.more:disabled { background: var(--card); color: var(--muted); }
+.more[hidden] { display: none; }
 
 .foot {
   margin-top: 32px;
